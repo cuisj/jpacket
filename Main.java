@@ -12,8 +12,9 @@ public class Main {
                             0x01, 0x01, 0x08, 0x0a, 0x25, 0x7c, 0x6e, (byte)0x9a,
                             0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00, 0x00};
 
-        Packet p = new Packet();
-        Packet.IP ip = p.decodeIP(packet, 0, packet.length);
+        byte packet1[] = new byte[64];
+
+        Packet.IP ip = new Packet.IP(packet, 0, packet.length);
 
         System.out.format("version: %d\n", ip.version);
         System.out.format("ihl: %d\n", ip.ihl);
@@ -27,7 +28,8 @@ public class Main {
         System.out.format("saddr: %X\n", ip.saddr);
         System.out.format("daddr: %X\n", ip.daddr);
 
-        Packet.TCP tcp = p.decodeTCP(packet, ip.ihl, packet.length - ip.ihl);
+        Packet.TCP tcp = new Packet.TCP(packet, ip.ihl, packet.length - ip.ihl);
+
         System.out.format("source: %d\n", tcp.source);
         System.out.format("dest: %d\n", tcp.dest);
         System.out.format("seq: %d\n", tcp.seq);
@@ -46,12 +48,10 @@ public class Main {
         System.out.format("tcp check: %X\n", tcp.check);
         System.out.format("urg_ptr: %X\n", tcp.urg_ptr);
 
-        p.recalcIPCheckSum(packet, 0, ip.ihl);
-        ip = p.decodeIP(packet, 0, packet.length);
-        System.out.format("ip check: %X\n", ip.check);
+        ip.encode(packet1, 0, packet1.length);
+        tcp.encode(packet1, ip.ihl, packet1.length - ip.ihl);
 
-        p.recalcTCPCheckSum(packet, 0, ip.tot_len);
-        tcp = p.decodeTCP(packet, ip.ihl, packet.length);
-        System.out.format("tcp check: %X\n", tcp.check);
+        Packet.recalcIPCheckSum(packet, 0, ip.ihl);
+        Packet.recalcTCPCheckSum(packet, 0, ip.tot_len);
     }
 }
